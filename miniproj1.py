@@ -2,8 +2,8 @@
 import nltk
 
 import timeit
-import Stemmer
-stemmer = Stemmer.Stemmer('english')
+from nltk.stem.snowball import SnowballStemmer
+stemmer = SnowballStemmer("english")
 from collections import defaultdict
 import xml.sax
 import re
@@ -15,21 +15,22 @@ docCount=0
 stemmap=defaultdict(lambda:"")
 start = 0
 
-def parsetext(text):
+def parsetext(text,id):
     global stemmap
+    global words
     newtext =""
     text = re.sub(u'=References==[^=]*=','=',text)
     text = re.sub(u'=External links==[^=]*=','=',text)
-    text = re.sub(u'=Bibliography==[^=]*=','=',text)
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
     for i in text:
         if i not in stop_words:
             if stemmap[i]=="":
-                stemmap[i]=stemmer.stemWord(i)
+                stemmap[i]=stemmer.stem(i)
+            if words[i]=="":
+                words[i]==
             newtext+=(stemmap[i]+" ")
-    print(newtext)    
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -79,11 +80,10 @@ class WikiHandler( xml.sax.ContentHandler):
             self.id=0
         if(tag=="text"):
             self.text=0
-            #print(self.bufid)
-            parsetext(self.buftext)
-            #if int(self.bufid)%200 == 0:
-            #    print(timeit.default_timer()-start)
-            print(self.bufid)
+            parsetext(self.buftext, self.bufid)
+            if int(self.bufid)%200 == 0:
+                print(timeit.default_timer()-start)
+                print(self.bufid)
                 
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
