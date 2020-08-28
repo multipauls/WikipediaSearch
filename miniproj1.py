@@ -1,29 +1,35 @@
+#total 30302
 import nltk
+
 import timeit
-from nltk.stem.snowball import SnowballStemmer
-stemmer = SnowballStemmer("english")
+import Stemmer
+stemmer = Stemmer.Stemmer('english')
 from collections import defaultdict
-import timeit
 import xml.sax
 import re
+from nltk.corpus import stopwords
+stop_words = set(stopwords.words('english'))
 words= defaultdict(dict)
 titles=defaultdict(str)
 docCount=0
 stemmap=defaultdict(lambda:"")
-def stemming(word):
-    if stemmap[word]=="":
-        stemmap[word]=stemmer.stem(word)
-    return stemmer.stem(word)
+start = 0
+
 def parsetext(text):
+    global stemmap
     newtext =""
     text = re.sub(u'=References==[^=]*=','=',text)
     text = re.sub(u'=External links==[^=]*=','=',text)
+    text = re.sub(u'=Bibliography==[^=]*=','=',text)
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
     for i in text:
-        newtext+=(stemming(i)+" ")
-    print(newtext)
+        if i not in stop_words:
+            if stemmap[i]=="":
+                stemmap[i]=stemmer.stemWord(i)
+            newtext+=(stemmap[i]+" ")
+    print(newtext)    
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -33,7 +39,6 @@ class WikiHandler( xml.sax.ContentHandler):
         self.text=0
         self.title=0
         self.count=0
-        self.count_title=0
         self.bufid=""
         self.title_words=defaultdict(int)
         self.body_words=defaultdict(int)
@@ -68,16 +73,19 @@ class WikiHandler( xml.sax.ContentHandler):
         if(tag=="page"):
             self.page=0
             self.count+=1
-            self.count_title+=1
         if(tag=="title"):
             self.title=0
         if(tag=="id"):
             self.id=0
         if(tag=="text"):
             self.text=0
+            #print(self.bufid)
             parsetext(self.buftext)
+            #if int(self.bufid)%200 == 0:
+            #    print(timeit.default_timer()-start)
+            print(self.bufid)
                 
-if __name__ == "__main__":                                            #main
+if __name__ == "__main__":                                            
     start = timeit.default_timer()
     parser = xml.sax.make_parser()
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
