@@ -19,8 +19,67 @@ def parsetext(text,id):
     global stemmap
     global words
     newtext =""
-    text = re.sub(u'=References==[^=]*=','=',text)
-    text = re.sub(u'=External links==[^=]*=','=',text)
+    newcat=""
+    newlink=""
+    newref=""
+    newinfo=""
+    info = " "
+    info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
+    info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
+    info = re.sub(u'[ ]+',' ',info)
+    info = re.split(" ", info)
+    for i in info:
+        if i not in stop_words:
+            #print(i)
+            if stemmap[i]=="":
+                stemmap[i]=stemmer.stem(i)
+            #if words[i]=="":
+            #    words[i]==
+            newinfo+=(stemmap[i]+" ")
+    print(newinfo)
+    ref=" "
+    ref = ref.join(re.findall(u'==References==[^=]+\n=', text))
+    ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
+    ref = re.sub(u'[ ]+',' ',ref)
+    ref = re.split(" ", ref)
+    for i in ref:
+        if i not in stop_words:
+            if stemmap[i]=="":
+                stemmap[i]=stemmer.stem(i)
+            #if words[i]=="":
+            #    words[i]==
+            newref+=(stemmap[i]+" ")
+    #print(newref)
+    links=" "
+    links = links.join(re.findall(u'==External links==[^=]+\n=', text))
+    links = re.sub(u'[^a-zA-Z0-9 ]+',' ',links)
+    links = re.sub(u'[ ]+',' ',links)
+    links = re.split(" ", links)
+    for i in links:
+        if i not in stop_words:
+            if stemmap[i]=="":
+                stemmap[i]=stemmer.stem(i)
+            #if words[i]=="":
+            #    words[i]==
+            newlink+=(stemmap[i]+" ")
+            
+    cat =" "
+    cat = cat.join(re.findall(u'\[\[Category:(.*?)\]\]', text))
+    cat = re.sub(u'[^a-zA-Z0-9 ]+',' ',cat)
+    cat = re.sub(u'[ ]+',' ',cat)
+    cat = re.split(" ", cat)
+    for i in cat:
+        if i not in stop_words:
+            if stemmap[i]=="":
+                stemmap[i]=stemmer.stem(i)
+            #if words[i]=="":
+            #    words[i]==
+            newcat+=(stemmap[i]+" ")
+
+    text = re.sub(u'{{infobox[^}]*\n}}'," ", text)
+    text = re.sub(u'==References==[^=]+\n=',' ', text)
+    text = re.sub(u'==External links==[^=]+\n=',' ', text)
+    text = re.sub(u'\[\[Category:(.*?)\]\]',' ', text)
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
@@ -28,8 +87,8 @@ def parsetext(text,id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            if words[i]=="":
-                words[i]==
+            #if words[i]=="":
+            #    words[i]==
             newtext+=(stemmap[i]+" ")
 
 class WikiHandler( xml.sax.ContentHandler):
