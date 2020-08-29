@@ -13,10 +13,11 @@ titles=defaultdict(str)
 countwords=defaultdict(lambda:defaultdict(int))
 stemmap=defaultdict(lambda:"")
 start = 0
-
+wordcount=0
 def parsetext(text,title, id):
     global stemmap
     global countwords
+    global wordcount
     newtext =defaultdict(lambda:0)
     newcat=defaultdict(lambda:0)
     newlink=defaultdict(lambda:0)
@@ -29,6 +30,7 @@ def parsetext(text,title, id):
     info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
     info = re.sub(u'[ ]+',' ',info)
     info = re.split(" ", info)
+    wordcount+=len(info)
     for i in info:
         if i not in stop_words:
 
@@ -47,6 +49,7 @@ def parsetext(text,title, id):
     ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
     ref = re.sub(u'[ ]+',' ',ref)
     ref = re.split(" ", ref)
+    wordcount+=len(ref)
     for i in ref:
         if i not in stop_words:
             if stemmap[i]=="":
@@ -64,6 +67,7 @@ def parsetext(text,title, id):
     links = re.sub(u'[^a-zA-Z0-9 ]+',' ',links)
     links = re.sub(u'[ ]+',' ',links)
     links = re.split(" ", links)
+    wordcount+=len(links)
     for i in links:
         if i not in stop_words:
             if stemmap[i]=="":
@@ -82,6 +86,7 @@ def parsetext(text,title, id):
     cat = re.sub(u'[^a-zA-Z0-9 ]+',' ',cat)
     cat = re.sub(u'[ ]+',' ',cat)
     cat = re.split(" ", cat)
+    wordcount+=len(cat)
     for i in cat:
         if i not in stop_words:
             if stemmap[i]=="":
@@ -98,6 +103,7 @@ def parsetext(text,title, id):
     titletext = re.sub(u'[^a-zA-Z0-9 ]+',' ',title)
     titletext = re.sub(u'[ ]+',' ',titletext)
     titletext = re.split(" ", titletext)
+    wordcount+=len(titletext)
     for i in titletext:
         if i not in stop_words:
             if stemmap[i]=="":
@@ -117,6 +123,7 @@ def parsetext(text,title, id):
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
+    wordcount+=len(text)
     for i in text:
         if i not in stop_words:
             if stemmap[i]=="":
@@ -137,10 +144,7 @@ class WikiHandler( xml.sax.ContentHandler):
         self.id=0
         self.text=0
         self.title=0
-        self.count=0
         self.bufid=""
-        self.title_words=defaultdict(int)
-        self.body_words=defaultdict(int)
 
     
     def startElement(self,tag,attr):
@@ -169,7 +173,6 @@ class WikiHandler( xml.sax.ContentHandler):
         
         if(tag=="page"):
             self.page=0
-            self.count+=1
         if(tag=="title"):
             self.title=0
         if(tag=="id"):
@@ -184,11 +187,13 @@ if __name__ == "__main__":
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
     Handler = WikiHandler()
     parser.setContentHandler( Handler )
-   
-    parser.parse("wiki_text.txt")
+    parser.parse(sys.argv[1])
     filetext=dict(countwords)
-    f = open(sys.argv[1],"wb")
+    f = open(sys.argv[2],"wb")
     pickle.dump(filetext,f)
+    f.close()
+    f = open(sys.argv[3],"w")
+    f.write(str(wordcount)+str('\n')+str(len(countwords)))
     f.close()
     stop = timeit.default_timer()
     print (stop - start)
