@@ -1,6 +1,5 @@
-#total 30302
+import sys
 import nltk
-
 import timeit
 from nltk.stem.snowball import SnowballStemmer
 stemmer = SnowballStemmer("english")
@@ -8,21 +7,23 @@ from collections import defaultdict
 import xml.sax
 import re
 from nltk.corpus import stopwords
+import pickle
 stop_words = set(stopwords.words('english'))
-words= defaultdict(dict)
 titles=defaultdict(str)
-docCount=0
+countwords=defaultdict(lambda:defaultdict(int))
 stemmap=defaultdict(lambda:"")
 start = 0
 
-def parsetext(text,id):
+def parsetext(text,title, id):
     global stemmap
-    global words
-    newtext =""
-    newcat=""
-    newlink=""
-    newref=""
-    newinfo=""
+    global countwords
+    newtext =defaultdict(lambda:0)
+    newcat=defaultdict(lambda:0)
+    newlink=defaultdict(lambda:0)
+    newref=defaultdict(lambda:0)
+    newinfo=defaultdict(lambda:0)
+    newtitle=defaultdict(lambda:0)
+    newdoc=defaultdict(lambda:0)
     info = " "
     info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
     info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
@@ -30,13 +31,17 @@ def parsetext(text,id):
     info = re.split(" ", info)
     for i in info:
         if i not in stop_words:
-            #print(i)
+
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            #if words[i]=="":
-            #    words[i]==
-            newinfo+=(stemmap[i]+" ")
-    print(newinfo)
+
+            newinfo[stemmap[i]]+=1
+            if countwords[stemmap[i]][id] == 0:
+                countwords[stemmap[i]]['docs']+=1
+            countwords[stemmap[i]][id]+=1
+            countwords[stemmap[i]]['total']+=1
+
+
     ref=" "
     ref = ref.join(re.findall(u'==References==[^=]+\n=', text))
     ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
@@ -46,10 +51,14 @@ def parsetext(text,id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            #if words[i]=="":
-            #    words[i]==
-            newref+=(stemmap[i]+" ")
-    #print(newref)
+            
+
+            newref[stemmap[i]]+=1
+            if countwords[stemmap[i]][id] == 0:
+                countwords[stemmap[i]]['docs']+=1
+            countwords[stemmap[i]][id]+=1
+            countwords[stemmap[i]]['total']+=1
+
     links=" "
     links = links.join(re.findall(u'==External links==[^=]+\n=', text))
     links = re.sub(u'[^a-zA-Z0-9 ]+',' ',links)
@@ -59,9 +68,14 @@ def parsetext(text,id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            #if words[i]=="":
-            #    words[i]==
-            newlink+=(stemmap[i]+" ")
+            
+            newlink[stemmap[i]]+=1
+            if countwords[stemmap[i]][id] == 0:
+                countwords[stemmap[i]]['docs']+=1
+            countwords[stemmap[i]][id]+=1
+            countwords[stemmap[i]]['total']+=1
+
+
             
     cat =" "
     cat = cat.join(re.findall(u'\[\[Category:(.*?)\]\]', text))
@@ -72,9 +86,29 @@ def parsetext(text,id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            #if words[i]=="":
-            #    words[i]==
-            newcat+=(stemmap[i]+" ")
+
+            
+            newcat[stemmap[i]]+=1
+            if countwords[stemmap[i]][id] == 0:
+                countwords[stemmap[i]]['docs']+=1
+            countwords[stemmap[i]][id]+=1
+            countwords[stemmap[i]]['total']+=1
+
+
+    titletext = re.sub(u'[^a-zA-Z0-9 ]+',' ',title)
+    titletext = re.sub(u'[ ]+',' ',titletext)
+    titletext = re.split(" ", titletext)
+    for i in titletext:
+        if i not in stop_words:
+            if stemmap[i]=="":
+                stemmap[i]=stemmer.stem(i)
+
+            newtitle[stemmap[i]]+=1
+            if countwords[stemmap[i]][id] == 0:
+                countwords[stemmap[i]]['docs']+=1
+            countwords[stemmap[i]][id]+=1
+            countwords[stemmap[i]]['total']+=1
+
 
     text = re.sub(u'{{infobox[^}]*\n}}'," ", text)
     text = re.sub(u'==References==[^=]+\n=',' ', text)
@@ -87,9 +121,14 @@ def parsetext(text,id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            #if words[i]=="":
-            #    words[i]==
-            newtext+=(stemmap[i]+" ")
+
+            newtext[stemmap[i]]+=1
+            if countwords[stemmap[i]][id] == 0:
+                countwords[stemmap[i]]['docs']+=1
+            countwords[stemmap[i]][id]+=1
+            countwords[stemmap[i]]['total']+=1
+    #print(countwords)
+
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -105,12 +144,10 @@ class WikiHandler( xml.sax.ContentHandler):
 
     
     def startElement(self,tag,attr):
-        global docCount
         if(tag=="id" and self.page==0):
             self.page=1
             self.id=1
             self.bufid=""
-            docCount+=1
         elif(tag=="title"):
             self.title=1
             self.buftitle=""
@@ -129,7 +166,7 @@ class WikiHandler( xml.sax.ContentHandler):
        
                      
     def endElement(self,tag):
-        #global fp_titlefile
+        
         if(tag=="page"):
             self.page=0
             self.count+=1
@@ -139,10 +176,7 @@ class WikiHandler( xml.sax.ContentHandler):
             self.id=0
         if(tag=="text"):
             self.text=0
-            parsetext(self.buftext, self.bufid)
-            if int(self.bufid)%200 == 0:
-                print(timeit.default_timer()-start)
-                print(self.bufid)
+            parsetext(self.buftext, self.buftitle, self.bufid)
                 
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
@@ -152,5 +186,9 @@ if __name__ == "__main__":
     parser.setContentHandler( Handler )
    
     parser.parse("wiki_text.txt")
+    filetext=dict(countwords)
+    f = open(sys.argv[1],"wb")
+    pickle.dump(filetext,f)
+    f.close()
     stop = timeit.default_timer()
     print (stop - start)
