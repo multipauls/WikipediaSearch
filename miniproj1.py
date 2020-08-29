@@ -10,21 +10,17 @@ from nltk.corpus import stopwords
 import pickle
 stop_words = set(stopwords.words('english'))
 titles=defaultdict(str)
-countwords=defaultdict(lambda:defaultdict(int))
 stemmap=defaultdict(lambda:"")
 start = 0
 wordcount=0
+def retdict():
+    return defaultdict(int)
+
+countwords=defaultdict(retdict)
 def parsetext(text,title, id):
     global stemmap
     global countwords
     global wordcount
-    newtext =defaultdict(lambda:0)
-    newcat=defaultdict(lambda:0)
-    newlink=defaultdict(lambda:0)
-    newref=defaultdict(lambda:0)
-    newinfo=defaultdict(lambda:0)
-    newtitle=defaultdict(lambda:0)
-    newdoc=defaultdict(lambda:0)
     info = " "
     info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
     info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
@@ -37,12 +33,11 @@ def parsetext(text,title, id):
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
 
-            newinfo[stemmap[i]]+=1
             if countwords[stemmap[i]][id] == 0:
                 countwords[stemmap[i]]['docs']+=1
-            countwords[stemmap[i]][id]+=1
+                countwords[stemmap[i]][id]=defaultdict(int)
             countwords[stemmap[i]]['total']+=1
-
+            countwords[stemmap[i]][id]["info"]+=1
 
     ref=" "
     ref = ref.join(re.findall(u'==References==[^=]+\n=', text))
@@ -56,11 +51,11 @@ def parsetext(text,title, id):
                 stemmap[i]=stemmer.stem(i)
             
 
-            newref[stemmap[i]]+=1
             if countwords[stemmap[i]][id] == 0:
                 countwords[stemmap[i]]['docs']+=1
-            countwords[stemmap[i]][id]+=1
+                countwords[stemmap[i]][id]=defaultdict(int)
             countwords[stemmap[i]]['total']+=1
+            countwords[stemmap[i]][id]["ref"]+=1
 
     links=" "
     links = links.join(re.findall(u'==External links==[^=]+\n=', text))
@@ -73,11 +68,11 @@ def parsetext(text,title, id):
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
             
-            newlink[stemmap[i]]+=1
             if countwords[stemmap[i]][id] == 0:
                 countwords[stemmap[i]]['docs']+=1
-            countwords[stemmap[i]][id]+=1
+                countwords[stemmap[i]][id]=defaultdict(int)
             countwords[stemmap[i]]['total']+=1
+            countwords[stemmap[i]][id]["link"]+=1
 
 
             
@@ -93,11 +88,11 @@ def parsetext(text,title, id):
                 stemmap[i]=stemmer.stem(i)
 
             
-            newcat[stemmap[i]]+=1
             if countwords[stemmap[i]][id] == 0:
                 countwords[stemmap[i]]['docs']+=1
-            countwords[stemmap[i]][id]+=1
+                countwords[stemmap[i]][id]=defaultdict(int)
             countwords[stemmap[i]]['total']+=1
+            countwords[stemmap[i]][id]["cat"]+=1
 
 
     titletext = re.sub(u'[^a-zA-Z0-9 ]+',' ',title)
@@ -109,11 +104,11 @@ def parsetext(text,title, id):
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
 
-            newtitle[stemmap[i]]+=1
             if countwords[stemmap[i]][id] == 0:
                 countwords[stemmap[i]]['docs']+=1
-            countwords[stemmap[i]][id]+=1
+                countwords[stemmap[i]][id]=defaultdict(int)
             countwords[stemmap[i]]['total']+=1
+            countwords[stemmap[i]][id]["title"]+=1
 
 
     text = re.sub(u'{{infobox[^}]*\n}}'," ", text)
@@ -129,12 +124,11 @@ def parsetext(text,title, id):
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
 
-            newtext[stemmap[i]]+=1
             if countwords[stemmap[i]][id] == 0:
                 countwords[stemmap[i]]['docs']+=1
-            countwords[stemmap[i]][id]+=1
-            countwords[stemmap[i]]['total']+=1
-    #print(countwords)
+                countwords[stemmap[i]][id]=defaultdict(int)
+            countwords[stemmap[i]]['total']+=1            
+            countwords[stemmap[i]][id]["title"]+=1
 
 
 class WikiHandler( xml.sax.ContentHandler):
@@ -180,7 +174,9 @@ class WikiHandler( xml.sax.ContentHandler):
         if(tag=="text"):
             self.text=0
             parsetext(self.buftext, self.buftitle, self.bufid)
-                
+            if int(self.bufid)%300 ==0:
+                print(timeit.default_timer()-start)
+                print(self.bufid)
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
     parser = xml.sax.make_parser()
@@ -188,9 +184,19 @@ if __name__ == "__main__":
     Handler = WikiHandler()
     parser.setContentHandler( Handler )
     parser.parse(sys.argv[1])
-    filetext=dict(countwords)
-    f = open(sys.argv[2],"wb")
+    filetext = dict(countwords)
+    titleslist=dict(titles)
+    f = open(sys.argv[2]+"/index.txt","wb")
     pickle.dump(filetext,f)
+
+    #for word in countwords:
+    #    f.write("||"+word+"|")
+    #    for id in countwords[word]:
+    #        f.write(str(id)+':'+str(countwords[word][id])+"|")
+
+    #f.close()
+    f = open(sys.argv[2]+"/titles.txt","wb")
+    pickle.dump(titleslist,f)
     f.close()
     f = open(sys.argv[3],"w")
     f.write(str(wordcount)+str('\n')+str(len(countwords)))
