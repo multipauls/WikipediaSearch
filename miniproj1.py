@@ -28,7 +28,7 @@ def parsetext(text,title, id):
     info = re.split(" ", info)
     wordcount+=len(info)
     for i in info:
-        if i not in stop_words:
+        if i not in stop_words and len(i)>1:
 
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
@@ -47,6 +47,9 @@ def parsetext(text,title, id):
     ref=" "
     ref = ref.join(re.findall(u'==References==[^=]+\n=', text))
     ref = re.sub(u'==References==',' ',ref)
+    ref = re.sub(u'{{Reflist}}',' ',ref)
+    ref = re.sub(u'{{Refbegin}}',' ',ref)
+    ref = re.sub(u'{{Refend}}',' ',ref) 
     ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
     ref = re.sub(u'http',' ',ref)
     ref = re.sub(u'www',' ',ref)
@@ -54,7 +57,7 @@ def parsetext(text,title, id):
     ref = re.split(" ", ref)
     wordcount+=len(ref)
     for i in ref:
-        if i not in stop_words:
+        if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
             if not countwords[stemmap[i]].get("docs"):
@@ -79,7 +82,7 @@ def parsetext(text,title, id):
     links = re.split(" ", links)
     wordcount+=len(links)
     for i in links:
-        if i not in stop_words:
+        if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
             if not countwords[stemmap[i]].get("docs"):
@@ -104,7 +107,7 @@ def parsetext(text,title, id):
     cat = re.split(" ", cat)
     wordcount+=len(cat)
     for i in cat:
-        if i not in stop_words:
+        if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
 
@@ -126,7 +129,7 @@ def parsetext(text,title, id):
     titletext = re.split(" ", titletext)
     wordcount+=len(titletext)
     for i in titletext:
-        if i not in stop_words:
+        if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
             if not countwords[stemmap[i]].get("docs"):
@@ -146,12 +149,14 @@ def parsetext(text,title, id):
     text = re.sub(u'==References==[^=]+\n=',' ', text)
     text = re.sub(u'==External links==[^=]+\n=',' ', text)
     text = re.sub(u'\[\[Category:(.*?)\]\]',' ', text)
+    text = re.sub(u'{{sfn[^}]+}}',' ', text)
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
     wordcount+=len(text)
     for i in text:
-        if i not in stop_words:
+        if i not in stop_words and i != "" and len(i)>1:
+            #print(i)
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
             if not countwords[stemmap[i]].get("docs"):
@@ -165,7 +170,8 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]][id]["text"]=0
             countwords[stemmap[i]]['total']+=1            
             countwords[stemmap[i]][id]["text"]+=1
-        print(countwords[stemmap[i]])
+        #print(stemmap[i], end="")
+        #print(countwords[stemmap[i]])
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -210,9 +216,9 @@ class WikiHandler( xml.sax.ContentHandler):
         if(tag=="text"):
             self.text=0
             parsetext(self.buftext, self.buftitle, self.bufid)
-            #if int(self.bufid)%300 ==0:
-                #print(timeit.default_timer()-start)
-                #print(self.bufid)
+            if int(self.bufid)%300 ==0:
+                print(timeit.default_timer()-start)
+                print(self.bufid)
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
     parser = xml.sax.make_parser()
