@@ -171,7 +171,8 @@ def parsetext(text,title, id):
             countwords[stemmap[i]]['total']+=1            
             countwords[stemmap[i]][id]["text"]+=1
         #print(stemmap[i], end="")
-        #print(countwords[stemmap[i]])
+        #if countwords[stemmap[i]]!={}:
+            #print(countwords[stemmap[i]])
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -228,9 +229,9 @@ if __name__ == "__main__":
     parser.parse(sys.argv[1])
     filetext = dict(countwords)
     titleslist=dict(titles)
-    f = open(sys.argv[2]+"/index.txt","wb")
-    pickle.dump(filetext,f, protocol=pickle.HIGHEST_PROTOCOL)
-    f.close()
+    #f = open(sys.argv[2]+"/index.txt","wb")
+    #pickle.dump(filetext,f, protocol=pickle.HIGHEST_PROTOCOL)
+    #f.close()
     f = open(sys.argv[2]+"/titles.txt","wb")
     pickle.dump(titleslist,f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
