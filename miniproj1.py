@@ -13,16 +13,16 @@ titles=defaultdict(str)
 stemmap=defaultdict(lambda:"")
 start = 0
 wordcount=0
-def retdict():
-    return defaultdict(int)
 
-countwords=defaultdict(retdict)
+
+countwords=defaultdict(dict)
 def parsetext(text,title, id):
     global stemmap
     global countwords
     global wordcount
     info = " "
     info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
+    info = re.sub(u'{{infobox',' ',info)
     info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
     info = re.sub(u'[ ]+',' ',info)
     info = re.split(" ", info)
@@ -32,16 +32,24 @@ def parsetext(text,title, id):
 
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-
-            if countwords[stemmap[i]][id] == 0:
+            if not countwords[stemmap[i]].get("docs"):
+                countwords[stemmap[i]]['docs']=0
+            if not countwords[stemmap[i]].get("total"):
+                countwords[stemmap[i]]['total']=0
+            if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['docs']+=1
-                countwords[stemmap[i]][id]=defaultdict(int)
+                countwords[stemmap[i]][id]=dict()
+            if not countwords[stemmap[i]][id].get("info"):
+                countwords[stemmap[i]][id]["info"]=0
             countwords[stemmap[i]]['total']+=1
             countwords[stemmap[i]][id]["info"]+=1
-
+            
     ref=" "
     ref = ref.join(re.findall(u'==References==[^=]+\n=', text))
+    ref = re.sub(u'==References==',' ',ref)
     ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
+    ref = re.sub(u'http',' ',ref)
+    ref = re.sub(u'www',' ',ref)
     ref = re.sub(u'[ ]+',' ',ref)
     ref = re.split(" ", ref)
     wordcount+=len(ref)
@@ -49,17 +57,24 @@ def parsetext(text,title, id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            
-
-            if countwords[stemmap[i]][id] == 0:
+            if not countwords[stemmap[i]].get("docs"):
+                countwords[stemmap[i]]['docs']=0
+            if not countwords[stemmap[i]].get("total"):
+                countwords[stemmap[i]]['total']=0
+            if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['docs']+=1
-                countwords[stemmap[i]][id]=defaultdict(int)
+                countwords[stemmap[i]][id]=dict()
+            if not countwords[stemmap[i]][id].get("ref"):
+                countwords[stemmap[i]][id]["ref"]=0
             countwords[stemmap[i]]['total']+=1
             countwords[stemmap[i]][id]["ref"]+=1
 
     links=" "
     links = links.join(re.findall(u'==External links==[^=]+\n=', text))
+    links = re.sub(u'==External links==',' ',links)
     links = re.sub(u'[^a-zA-Z0-9 ]+',' ',links)
+    links = re.sub(u'http',' ',links)
+    links = re.sub(u'www',' ',links)    
     links = re.sub(u'[ ]+',' ',links)
     links = re.split(" ", links)
     wordcount+=len(links)
@@ -67,10 +82,15 @@ def parsetext(text,title, id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-            
-            if countwords[stemmap[i]][id] == 0:
+            if not countwords[stemmap[i]].get("docs"):
+                countwords[stemmap[i]]['docs']=0
+            if not countwords[stemmap[i]].get("total"):
+                countwords[stemmap[i]]['total']=0
+            if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['docs']+=1
-                countwords[stemmap[i]][id]=defaultdict(int)
+                countwords[stemmap[i]][id]=dict()
+            if not countwords[stemmap[i]][id].get("link"):
+                countwords[stemmap[i]][id]["link"]=0
             countwords[stemmap[i]]['total']+=1
             countwords[stemmap[i]][id]["link"]+=1
 
@@ -79,6 +99,7 @@ def parsetext(text,title, id):
     cat =" "
     cat = cat.join(re.findall(u'\[\[Category:(.*?)\]\]', text))
     cat = re.sub(u'[^a-zA-Z0-9 ]+',' ',cat)
+    cat = re.sub(u'Category',' ',cat)
     cat = re.sub(u'[ ]+',' ',cat)
     cat = re.split(" ", cat)
     wordcount+=len(cat)
@@ -87,10 +108,15 @@ def parsetext(text,title, id):
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
 
-            
-            if countwords[stemmap[i]][id] == 0:
+            if not countwords[stemmap[i]].get("docs"):
+                countwords[stemmap[i]]['docs']=0
+            if not countwords[stemmap[i]].get("total"):
+                countwords[stemmap[i]]['total']=0
+            if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['docs']+=1
-                countwords[stemmap[i]][id]=defaultdict(int)
+                countwords[stemmap[i]][id]=dict()            
+            if not countwords[stemmap[i]][id].get("cat"):
+                countwords[stemmap[i]][id]["cat"]=0
             countwords[stemmap[i]]['total']+=1
             countwords[stemmap[i]][id]["cat"]+=1
 
@@ -103,10 +129,15 @@ def parsetext(text,title, id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-
-            if countwords[stemmap[i]][id] == 0:
+            if not countwords[stemmap[i]].get("docs"):
+                countwords[stemmap[i]]['docs']=0
+            if not countwords[stemmap[i]].get("total"):
+                countwords[stemmap[i]]['total']=0
+            if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['docs']+=1
-                countwords[stemmap[i]][id]=defaultdict(int)
+                countwords[stemmap[i]][id]=dict()
+            if not countwords[stemmap[i]][id].get("title"):
+                countwords[stemmap[i]][id]["title"]=0
             countwords[stemmap[i]]['total']+=1
             countwords[stemmap[i]][id]["title"]+=1
 
@@ -123,13 +154,18 @@ def parsetext(text,title, id):
         if i not in stop_words:
             if stemmap[i]=="":
                 stemmap[i]=stemmer.stem(i)
-
-            if countwords[stemmap[i]][id] == 0:
+            if not countwords[stemmap[i]].get("docs"):
+                countwords[stemmap[i]]['docs']=0
+            if not countwords[stemmap[i]].get("total"):
+                countwords[stemmap[i]]['total']=0
+            if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['docs']+=1
-                countwords[stemmap[i]][id]=defaultdict(int)
+                countwords[stemmap[i]][id]=dict()
+            if not countwords[stemmap[i]][id].get("text"):
+                countwords[stemmap[i]][id]["text"]=0
             countwords[stemmap[i]]['total']+=1            
-            countwords[stemmap[i]][id]["title"]+=1
-
+            countwords[stemmap[i]][id]["text"]+=1
+        print(countwords[stemmap[i]])
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -174,9 +210,9 @@ class WikiHandler( xml.sax.ContentHandler):
         if(tag=="text"):
             self.text=0
             parsetext(self.buftext, self.buftitle, self.bufid)
-            if int(self.bufid)%300 ==0:
-                print(timeit.default_timer()-start)
-                print(self.bufid)
+            #if int(self.bufid)%300 ==0:
+                #print(timeit.default_timer()-start)
+                #print(self.bufid)
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
     parser = xml.sax.make_parser()
@@ -187,19 +223,14 @@ if __name__ == "__main__":
     filetext = dict(countwords)
     titleslist=dict(titles)
     f = open(sys.argv[2]+"/index.txt","wb")
-    pickle.dump(filetext,f)
-
-    #for word in countwords:
-    #    f.write("||"+word+"|")
-    #    for id in countwords[word]:
-    #        f.write(str(id)+':'+str(countwords[word][id])+"|")
-
-    #f.close()
+    pickle.dump(filetext,f, protocol=pickle.HIGHEST_PROTOCOL)
+    f.close()
     f = open(sys.argv[2]+"/titles.txt","wb")
-    pickle.dump(titleslist,f)
+    pickle.dump(titleslist,f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
-    f = open(sys.argv[3],"w")
-    f.write(str(wordcount)+str('\n')+str(len(countwords)))
-    f.close()
+    #f = open(sys.argv[3],"w")
+    #f.write(str(wordcount)+str('\n')+str(len(countwords)))
+    #f.close()
+    print(sys.getsizeof(str(countwords)))
     stop = timeit.default_timer()
     print (stop - start)
