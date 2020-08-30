@@ -1,25 +1,27 @@
 import sys
-import nltk
 import timeit
+import nltk
 from nltk.stem.snowball import SnowballStemmer
 stemmer = SnowballStemmer("english")
 from collections import defaultdict
 import xml.sax
 import re
-from nltk.corpus import stopwords
 import pickle
-stop_words = set(stopwords.words('english'))
+stop_words = {"a", "about", "above", "above", "across", "after", "afterwards", "again", "against", "all", "almost", "alone", "along", "already", "also","although","always","am","among", "amongst", "amoungst", "amount",  "an", "and", "another", "any","anyhow","anyone","anything","anyway", "anywhere", "are", "around", "as",  "at", "back","be","became", "because","become","becomes", "becoming", "been", "before", "beforehand", "behind", "being", "below", "beside", "besides", "between", "beyond", "bill", "both", "bottom","but", "by", "call", "can", "cannot", "cant", "co", "con", "could", "couldnt", "cry", "de", "describe", "detail", "do", "done", "down", "due", "during", "each", "eg", "eight", "either", "eleven","else", "elsewhere", "empty", "enough", "etc", "even", "ever", "every", "everyone", "everything", "everywhere", "except", "few", "fifteen", "fify", "fill", "find", "fire", "first", "five", "for", "former", "formerly", "forty", "found", "four", "from", "front", "full", "further", "get", "give", "go", "had", "has", "hasnt", "have", "he", "hence", "her", "here", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "him", "himself", "his", "how", "however", "hundred", "ie", "if", "in", "inc", "indeed", "interest", "into", "is", "it", "its", "itself", "keep", "last", "latter", "latterly", "least", "less", "ltd", "made", "many", "may", "me", "meanwhile", "might", "mill", "mine", "more", "moreover", "most", "mostly", "move", "much", "must", "my", "myself", "name", "namely", "neither", "never", "nevertheless", "next", "nine", "no", "nobody", "none", "noone", "nor", "not", "nothing", "now", "nowhere", "of", "off", "often", "on", "once", "one", "only", "onto", "or", "other", "others", "otherwise", "our", "ours", "ourselves", "out", "over", "own","part", "per", "perhaps", "please", "put", "rather", "re", "same", "see", "seem", "seemed", "seeming", "seems", "serious", "several", "she", "should", "show", "side", "since", "sincere", "six", "sixty", "so", "some", "somehow", "someone", "something", "sometime", "sometimes", "somewhere", "still", "such", "system", "take", "ten", "than", "that", "the", "their", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "therefore", "therein", "thereupon", "these", "they", "thick", "thin", "third", "this", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "top", "toward", "towards", "twelve", "twenty", "two", "un", "under", "until", "up", "upon", "us", "very", "via", "was", "we", "well", "were", "what", "whatever", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whoever", "whole", "whom", "whose", "why", "will", "with", "within", "without", "would", "yet", "you", "your", "yours", "yourself", "yourselves", "the"}
 titles=defaultdict(str)
 stemmap=defaultdict(lambda:"")
 start = 0
 wordcount=0
-
+artcount = 0
 
 countwords=defaultdict(dict)
-def parsetext(text,title, id):
+def parsetext(text,title,id):
     global stemmap
     global countwords
     global wordcount
+    global artcount
+    artcount+=1
+    idx = artcount
     info = " "
     info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
     info = re.sub(u'{{infobox',' ',info)
@@ -39,11 +41,11 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]]['tot']=0
             if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['d']+=1
-                countwords[stemmap[i]][id]=dict()
-            if not countwords[stemmap[i]][id].get("i"):
-                countwords[stemmap[i]][id]["i"]=0
+                countwords[stemmap[i]][idx]=dict()
+            if not countwords[stemmap[i]][idx].get("i"):
+                countwords[stemmap[i]][idx]["i"]=0
             countwords[stemmap[i]]['tot']+=1
-            countwords[stemmap[i]][id]["i"]+=1
+            countwords[stemmap[i]][idx]["i"]+=1
             
     ref=" "
     ref = ref.join(re.findall(u'==References==[^=]+\n=', text))
@@ -68,11 +70,11 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]]['tot']=0
             if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['d']+=1
-                countwords[stemmap[i]][id]=dict()
-            if not countwords[stemmap[i]][id].get("r"):
-                countwords[stemmap[i]][id]["r"]=0
+                countwords[stemmap[i]][idx]=dict()
+            if not countwords[stemmap[i]][idx].get("r"):
+                countwords[stemmap[i]][idx]["r"]=0
             countwords[stemmap[i]]['tot']+=1
-            countwords[stemmap[i]][id]["r"]+=1
+            countwords[stemmap[i]][idx]["r"]+=1
 
     links=" "
     links = links.join(re.findall(u'==External links==[^=]+\n=', text))
@@ -94,11 +96,11 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]]['tot']=0
             if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['d']+=1
-                countwords[stemmap[i]][id]=dict()
-            if not countwords[stemmap[i]][id].get("l"):
-                countwords[stemmap[i]][id]["l"]=0
+                countwords[stemmap[i]][idx]=dict()
+            if not countwords[stemmap[i]][idx].get("l"):
+                countwords[stemmap[i]][idx]["l"]=0
             countwords[stemmap[i]]['tot']+=1
-            countwords[stemmap[i]][id]["l"]+=1
+            countwords[stemmap[i]][idx]["l"]+=1
 
 
             
@@ -121,11 +123,11 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]]['tot']=0
             if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['d']+=1
-                countwords[stemmap[i]][id]=dict()            
-            if not countwords[stemmap[i]][id].get("c"):
-                countwords[stemmap[i]][id]["c"]=0
+                countwords[stemmap[i]][idx]=dict()            
+            if not countwords[stemmap[i]][idx].get("c"):
+                countwords[stemmap[i]][idx]["c"]=0
             countwords[stemmap[i]]['tot']+=1
-            countwords[stemmap[i]][id]["c"]+=1
+            countwords[stemmap[i]][idx]["c"]+=1
 
 
     titletext = re.sub(u'[^a-zA-Z0-9 ]+',' ',title)
@@ -143,11 +145,11 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]]['tot']=0
             if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['d']+=1
-                countwords[stemmap[i]][id]=dict()
-            if not countwords[stemmap[i]][id].get("t"):
-                countwords[stemmap[i]][id]["t"]=0
+                countwords[stemmap[i]][idx]=dict()
+            if not countwords[stemmap[i]][idx].get("t"):
+                countwords[stemmap[i]][idx]["t"]=0
             countwords[stemmap[i]]['tot']+=1
-            countwords[stemmap[i]][id]["t"]+=1
+            countwords[stemmap[i]][idx]["t"]+=1
 
 
     text = re.sub(u'{{infobox[^}]*\n}}'," ", text)
@@ -171,15 +173,15 @@ def parsetext(text,title, id):
                 countwords[stemmap[i]]['tot']=0
             if not countwords[stemmap[i]].get(id):
                 countwords[stemmap[i]]['d']+=1
-                countwords[stemmap[i]][id]=dict()
-            if not countwords[stemmap[i]][id].get("b"):
-                countwords[stemmap[i]][id]["b"]=0
+                countwords[stemmap[i]][idx]=dict()
+            if not countwords[stemmap[i]][idx].get("b"):
+                countwords[stemmap[i]][idx]["b"]=0
             countwords[stemmap[i]]['tot']+=1            
-            countwords[stemmap[i]][id]["b"]+=1
+            countwords[stemmap[i]][idx]["b"]+=1
         #print(stemmap[i], end="")
         #if countwords[stemmap[i]]!={}:
             #print(countwords[stemmap[i]])
-
+    return artcount
 class WikiHandler( xml.sax.ContentHandler):
     
     def __init__(self):
@@ -222,7 +224,7 @@ class WikiHandler( xml.sax.ContentHandler):
             self.id=0
         if(tag=="text"):
             self.text=0
-            parsetext(self.buftext, self.buftitle, self.bufid)
+            self.bufid=parsetext(self.buftext, self.buftitle, self.bufid)
             if int(self.bufid)%300 ==0:
                 print(timeit.default_timer()-start)
                 print(self.bufid)
