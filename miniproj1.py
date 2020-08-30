@@ -7,6 +7,7 @@ from collections import defaultdict
 import xml.sax
 import re
 import pickle
+import os
 stop_words = {"a", "about", "above", "above", "across", "after", "afterwards", "again", "against", "all", "almost", "alone", "along", "already", "also","although","always","am","among", "amongst", "amoungst", "amount",  "an", "and", "another", "any","anyhow","anyone","anything","anyway", "anywhere", "are", "around", "as",  "at", "back","be","became", "because","become","becomes", "becoming", "been", "before", "beforehand", "behind", "being", "below", "beside", "besides", "between", "beyond", "bill", "both", "bottom","but", "by", "call", "can", "cannot", "cant", "co", "con", "could", "couldnt", "cry", "de", "describe", "detail", "do", "done", "down", "due", "during", "each", "eg", "eight", "either", "eleven","else", "elsewhere", "empty", "enough", "etc", "even", "ever", "every", "everyone", "everything", "everywhere", "except", "few", "fifteen", "fify", "fill", "find", "fire", "first", "five", "for", "former", "formerly", "forty", "found", "four", "from", "front", "full", "further", "get", "give", "go", "had", "has", "hasnt", "have", "he", "hence", "her", "here", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "him", "himself", "his", "how", "however", "hundred", "ie", "if", "in", "inc", "indeed", "interest", "into", "is", "it", "its", "itself", "keep", "last", "latter", "latterly", "least", "less", "ltd", "made", "many", "may", "me", "meanwhile", "might", "mill", "mine", "more", "moreover", "most", "mostly", "move", "much", "must", "my", "myself", "name", "namely", "neither", "never", "nevertheless", "next", "nine", "no", "nobody", "none", "noone", "nor", "not", "nothing", "now", "nowhere", "of", "off", "often", "on", "once", "one", "only", "onto", "or", "other", "others", "otherwise", "our", "ours", "ourselves", "out", "over", "own","part", "per", "perhaps", "please", "put", "rather", "re", "same", "see", "seem", "seemed", "seeming", "seems", "serious", "several", "she", "should", "show", "side", "since", "sincere", "six", "sixty", "so", "some", "somehow", "someone", "something", "sometime", "sometimes", "somewhere", "still", "such", "system", "take", "ten", "than", "that", "the", "their", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "therefore", "therein", "thereupon", "these", "they", "thick", "thin", "third", "this", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "top", "toward", "towards", "twelve", "twenty", "two", "un", "under", "until", "up", "upon", "us", "very", "via", "was", "we", "well", "were", "what", "whatever", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whoever", "whole", "whom", "whose", "why", "will", "with", "within", "without", "would", "yet", "you", "your", "yours", "yourself", "yourselves", "the"}
 titles=defaultdict(str)
 stemmap=defaultdict(lambda:"")
@@ -178,9 +179,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]][idx]["b"]=0
             countwords[stemmap[i]]['tot']+=1            
             countwords[stemmap[i]][idx]["b"]+=1
-        #print(stemmap[i], end="")
-        #if countwords[stemmap[i]]!={}:
-            #print(countwords[stemmap[i]])
+
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -225,9 +224,7 @@ class WikiHandler( xml.sax.ContentHandler):
             parsetext(self.buftext, self.buftitle)
             self.bufid=artcount
             titles[int(self.bufid)]=self.buftitle
-            if int(self.bufid)%300 ==0:
-                print(timeit.default_timer()-start)
-                print(self.bufid)
+
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
     parser = xml.sax.make_parser()
@@ -237,7 +234,9 @@ if __name__ == "__main__":
     parser.parse(sys.argv[1])
     filetext = dict(countwords)
     titleslist=dict(titles)
-    f = open(sys.argv[2]+"/index.txt","w")
+    if not os.path.exists(sys.argv[2]):
+        os.mkdir(sys.argv[2])
+    f = open(os.path.join(sys.argv[2],"index.txt"),"w")
     for i in countwords.keys():
         writestr=""
         writestr+=(str(i)+'|f'+str(countwords[i]["tot"])+'d'+str(countwords[i]["d"])+':')
@@ -250,12 +249,11 @@ if __name__ == "__main__":
         writestr+=('\n')
         f.write(writestr)
     f.close()
-    f = open(sys.argv[2]+"/titles.txt","wb")
+    f = open(os.path.join(sys.argv[2],"titles.txt"),"wb")
     pickle.dump(titleslist,f, protocol=pickle.HIGHEST_PROTOCOL)
     f.close()
     f = open(sys.argv[3],"w")
     f.write(str(wordcount)+str('\n')+str(len(countwords)))
     f.close()
-    print(sys.getsizeof(str(countwords)))
     stop = timeit.default_timer()
     print (stop - start)
