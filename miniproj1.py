@@ -15,7 +15,7 @@ wordcount=0
 artcount = 0
 
 countwords=defaultdict(dict)
-def parsetext(text,title,id):
+def parsetext(text,title):
     global stemmap
     global countwords
     global wordcount
@@ -181,7 +181,7 @@ def parsetext(text,title,id):
         #print(stemmap[i], end="")
         #if countwords[stemmap[i]]!={}:
             #print(countwords[stemmap[i]])
-    return artcount
+
 class WikiHandler( xml.sax.ContentHandler):
     
     def __init__(self):
@@ -190,7 +190,6 @@ class WikiHandler( xml.sax.ContentHandler):
         self.text=0
         self.title=0
         self.bufid=""
-
     
     def startElement(self,tag,attr):
         if(tag=="id" and self.page==0):
@@ -206,8 +205,7 @@ class WikiHandler( xml.sax.ContentHandler):
             
     def characters(self,data):
         if (self.id==1 and self.page==1):
-            self.bufid += data
-            titles[int(self.bufid)]=self.buftitle
+            pass
         elif(self.title==1 ):
             self.buftitle += data
         elif(self.text==1):
@@ -215,7 +213,7 @@ class WikiHandler( xml.sax.ContentHandler):
        
                      
     def endElement(self,tag):
-        
+        global artcount
         if(tag=="page"):
             self.page=0
         if(tag=="title"):
@@ -224,7 +222,9 @@ class WikiHandler( xml.sax.ContentHandler):
             self.id=0
         if(tag=="text"):
             self.text=0
-            self.bufid=parsetext(self.buftext, self.buftitle, self.bufid)
+            parsetext(self.buftext, self.buftitle)
+            self.bufid=artcount
+            titles[int(self.bufid)]=self.buftitle
             if int(self.bufid)%300 ==0:
                 print(timeit.default_timer()-start)
                 print(self.bufid)
@@ -239,14 +239,16 @@ if __name__ == "__main__":
     titleslist=dict(titles)
     f = open(sys.argv[2]+"/index.txt","w")
     for i in countwords.keys():
-        f.write(str(i)+'|f'+str(countwords[i]["tot"])+'d'+str(countwords[i]["d"])+':')
+        writestr=""
+        writestr+=(str(i)+'|f'+str(countwords[i]["tot"])+'d'+str(countwords[i]["d"])+':')
         for j in countwords[i].keys():
                 if j not in ["tot","d"]:
-                    f.write(str(j))
+                    writestr+=(str(j))
                     for k in countwords[i][j].keys():
-                            f.write(str(k)+str(countwords[i][j][k]))
-                    f.write(";")
-        f.write('\n')
+                            writestr+=(str(k)+str(countwords[i][j][k]))
+                    writestr+=str(";")
+        writestr+=('\n')
+        f.write(writestr)
     f.close()
     f = open(sys.argv[2]+"/titles.txt","wb")
     pickle.dump(titleslist,f, protocol=pickle.HIGHEST_PROTOCOL)
