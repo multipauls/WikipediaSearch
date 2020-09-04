@@ -27,6 +27,7 @@ def parsetext(text,title):
     info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
     info = re.sub(u'{{infobox',' ',info)
     info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
+    info = re.sub(u' 0[0]+ ',' ',info)
     info = re.sub(u'[ ]+',' ',info)
     info = info.lower()
     info = re.split(" ", info)
@@ -55,6 +56,7 @@ def parsetext(text,title):
     ref = re.sub(u'{{Refbegin}}',' ',ref)
     ref = re.sub(u'{{Refend}}',' ',ref) 
     ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
+    ref = re.sub(u' 0[0]+ ',' ',ref)
     ref = ref.lower()
     ref = re.sub(u'http',' ',ref)
     ref = re.sub(u'www',' ',ref)
@@ -81,6 +83,7 @@ def parsetext(text,title):
     links = links.join(re.findall(u'==External links==[^=]+\n=', text))
     links = re.sub(u'==External links==',' ',links)
     links = re.sub(u'[^a-zA-Z0-9 ]+',' ',links)
+    links = re.sub(u' 0[0]+ ',' ',links)
     links = links.lower()
     links = re.sub(u'http',' ',links)
     links = re.sub(u'www',' ',links)    
@@ -109,6 +112,7 @@ def parsetext(text,title):
     cat = cat.join(re.findall(u'\[\[Category:(.*?)\]\]', text))
     cat = re.sub(u'[^a-zA-Z0-9 ]+',' ',cat)
     cat = re.sub(u'\[\[Category',' ',cat)
+    cat = re.sub(u' 0[0]+ ',' ',cat)
     cat = cat.lower()
     cat = re.sub(u'[ ]+',' ',cat)
     cat = re.split(" ", cat)
@@ -160,6 +164,7 @@ def parsetext(text,title):
     text = text.lower()
     text = re.sub(u'{{sfn[^}]+}}',' ', text)
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
+    text = re.sub(u' 0[0]+ ',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
     wordcount+=len(text)
@@ -224,6 +229,9 @@ class WikiHandler( xml.sax.ContentHandler):
             parsetext(self.buftext, self.buftitle)
             self.bufid=artcount
             titles[int(self.bufid)]=self.buftitle
+            if (self.bufid%300==0):
+            	print(timeit.default_timer()-start)
+            	print(self.bufid)
 
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
@@ -232,7 +240,8 @@ if __name__ == "__main__":
     Handler = WikiHandler()
     parser.setContentHandler( Handler )
     parser.parse(sys.argv[1])
-    filetext = dict(countwords)
+    countwords = dict(countwords)
+    countwords ={k: countwords[k] for k in sorted(countwords)}
     titleslist=dict(titles)
     if not os.path.exists(sys.argv[2]):
         os.mkdir(sys.argv[2])
