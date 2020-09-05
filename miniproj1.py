@@ -81,7 +81,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]]['d']=0
             if not countwords[stemmap[i]].get("tot"):
                 countwords[stemmap[i]]['tot']=0
-            if not countwords[stemmap[i]].get(id):
+            if not countwords[stemmap[i]].get(idx):
                 countwords[stemmap[i]]['d']+=1
                 countwords[stemmap[i]][idx]=dict()
             if not countwords[stemmap[i]][idx].get("i"):
@@ -114,7 +114,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]]['d']=0
             if not countwords[stemmap[i]].get("tot"):
                 countwords[stemmap[i]]['tot']=0
-            if not countwords[stemmap[i]].get(id):
+            if not countwords[stemmap[i]].get(idx):
                 countwords[stemmap[i]]['d']+=1
                 countwords[stemmap[i]][idx]=dict()
             if not countwords[stemmap[i]][idx].get("r"):
@@ -144,7 +144,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]]['d']=0
             if not countwords[stemmap[i]].get("tot"):
                 countwords[stemmap[i]]['tot']=0
-            if not countwords[stemmap[i]].get(id):
+            if not countwords[stemmap[i]].get(idx):
                 countwords[stemmap[i]]['d']+=1
                 countwords[stemmap[i]][idx]=dict()
             if not countwords[stemmap[i]][idx].get("l"):
@@ -175,7 +175,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]]['d']=0
             if not countwords[stemmap[i]].get("tot"):
                 countwords[stemmap[i]]['tot']=0
-            if not countwords[stemmap[i]].get(id):
+            if not countwords[stemmap[i]].get(idx):
                 countwords[stemmap[i]]['d']+=1
                 countwords[stemmap[i]][idx]=dict()            
             if not countwords[stemmap[i]][idx].get("c"):
@@ -198,7 +198,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]]['d']=0
             if not countwords[stemmap[i]].get("tot"):
                 countwords[stemmap[i]]['tot']=0
-            if not countwords[stemmap[i]].get(id):
+            if not countwords[stemmap[i]].get(idx):
                 countwords[stemmap[i]]['d']+=1
                 countwords[stemmap[i]][idx]=dict()
             if not countwords[stemmap[i]][idx].get("t"):
@@ -230,7 +230,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]]['d']=0
             if not countwords[stemmap[i]].get("tot"):
                 countwords[stemmap[i]]['tot']=0
-            if not countwords[stemmap[i]].get(id):
+            if not countwords[stemmap[i]].get(idx):
                 countwords[stemmap[i]]['d']+=1
                 countwords[stemmap[i]][idx]=dict()
             if not countwords[stemmap[i]][idx].get("b"):
