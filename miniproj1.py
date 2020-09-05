@@ -6,32 +6,72 @@ stemmer = SnowballStemmer("english")
 from collections import defaultdict
 import xml.sax
 import re
-import pickle
 import os
+#import regex
 stop_words = {"a", "about", "above", "above", "across", "after", "afterwards", "again", "against", "all", "almost", "alone", "along", "already", "also","although","always","am","among", "amongst", "amoungst", "amount",  "an", "and", "another", "any","anyhow","anyone","anything","anyway", "anywhere", "are", "around", "as",  "at", "back","be","became", "because","become","becomes", "becoming", "been", "before", "beforehand", "behind", "being", "below", "beside", "besides", "between", "beyond", "bill", "both", "bottom","but", "by", "call", "can", "cannot", "cant", "co", "con", "could", "couldnt", "cry", "de", "describe", "detail", "do", "done", "down", "due", "during", "each", "eg", "eight", "either", "eleven","else", "elsewhere", "empty", "enough", "etc", "even", "ever", "every", "everyone", "everything", "everywhere", "except", "few", "fifteen", "fify", "fill", "find", "fire", "first", "five", "for", "former", "formerly", "forty", "found", "four", "from", "front", "full", "further", "get", "give", "go", "had", "has", "hasnt", "have", "he", "hence", "her", "here", "hereafter", "hereby", "herein", "hereupon", "hers", "herself", "him", "himself", "his", "how", "however", "hundred", "ie", "if", "in", "inc", "indeed", "interest", "into", "is", "it", "its", "itself", "keep", "last", "latter", "latterly", "least", "less", "ltd", "made", "many", "may", "me", "meanwhile", "might", "mill", "mine", "more", "moreover", "most", "mostly", "move", "much", "must", "my", "myself", "name", "namely", "neither", "never", "nevertheless", "next", "nine", "no", "nobody", "none", "noone", "nor", "not", "nothing", "now", "nowhere", "of", "off", "often", "on", "once", "one", "only", "onto", "or", "other", "others", "otherwise", "our", "ours", "ourselves", "out", "over", "own","part", "per", "perhaps", "please", "put", "rather", "re", "same", "see", "seem", "seemed", "seeming", "seems", "serious", "several", "she", "should", "show", "side", "since", "sincere", "six", "sixty", "so", "some", "somehow", "someone", "something", "sometime", "sometimes", "somewhere", "still", "such", "system", "take", "ten", "than", "that", "the", "their", "them", "themselves", "then", "thence", "there", "thereafter", "thereby", "therefore", "therein", "thereupon", "these", "they", "thick", "thin", "third", "this", "those", "though", "three", "through", "throughout", "thru", "thus", "to", "together", "too", "top", "toward", "towards", "twelve", "twenty", "two", "un", "under", "until", "up", "upon", "us", "very", "via", "was", "we", "well", "were", "what", "whatever", "when", "whence", "whenever", "where", "whereafter", "whereas", "whereby", "wherein", "whereupon", "wherever", "whether", "which", "while", "whither", "who", "whoever", "whole", "whom", "whose", "why", "will", "with", "within", "without", "would", "yet", "you", "your", "yours", "yourself", "yourselves", "the"}
-titles=defaultdict(str)
+titles=[""]
 stemmap=defaultdict(lambda:"")
 start = 0
 wordcount=0
 artcount = 0
-
+stemcount =0
 countwords=defaultdict(dict)
+fcount = 0
+def writetext(wpath):
+    global countwords
+    global stemcount
+    global fcount
+    global t
+    global titles
+    countwords = dict(countwords)
+    countwords ={k: countwords[k] for k in sorted(countwords)}
+    if not os.path.exists(wpath):
+        os.mkdir(wpath)
+    fname = "index"+str(fcount)+".txt"
+    f = open(os.path.join(wpath,fname),"w")
+    for i in countwords.keys():
+        writestr=""
+        writestr+=(str(i)+'|F'+str(countwords[i]["tot"])+'D'+str(countwords[i]["d"])+':')
+        for j in countwords[i].keys():
+                if j not in ["tot","d"]:
+                    writestr+=(str(j))
+                    for k in countwords[i][j].keys():
+                            writestr+=(str(k)+str(countwords[i][j][k]))
+                    writestr+=str(";")
+        writestr+=('\n')
+        f.write(writestr)
+    f.close()
+    t.write(titles[0])
+    t.close()
+    del(titles[0])
+    titles.append("")
+    t= open(os.path.join(wpath,"titles.txt"),"a")
+    stemcount+=len(countwords)
+    countwords.clear()
+    countwords=defaultdict(dict,countwords)
+    fcount+=1
+    
 def parsetext(text,title):
     global stemmap
     global countwords
     global wordcount
     global artcount
+    global titles
     artcount+=1
+    wcdoc=0
     idx = artcount
     info = " "
     info = info.join(re.findall(u'{{infobox[^}]*\n}}', text))
     info = re.sub(u'{{infobox',' ',info)
     info = re.sub(u'[^a-zA-Z0-9 ]+',' ',info)
-    info = re.sub(u' 0[0]+ ',' ',info)
+    info = re.sub(u'[^a-zA-Z1-9]0[0]+[1-9]*[^a-zA-Z1-9]',' ',info)
+    info = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[A-Za-z0-9]*[^a-zA-Z1-9]',' ',info)
+    info = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[^a-zA-Z1-9]',' ',info)
     info = re.sub(u'[ ]+',' ',info)
     info = info.lower()
     info = re.split(" ", info)
     wordcount+=len(info)
+    wcdoc+=len(info)
     for i in info:
         if i not in stop_words and len(i)>1:
 
@@ -56,13 +96,16 @@ def parsetext(text,title):
     ref = re.sub(u'{{Refbegin}}',' ',ref)
     ref = re.sub(u'{{Refend}}',' ',ref) 
     ref = re.sub(u'[^a-zA-Z0-9 ]+',' ',ref)
-    ref = re.sub(u' 0[0]+ ',' ',ref)
+    ref = re.sub(u'[^a-zA-Z1-9]0[0]+[1-9]*[^a-zA-Z1-9]',' ',ref)
+    ref = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[A-Za-z0-9]*[^a-zA-Z1-9]',' ',ref)
+    ref = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[^a-zA-Z1-9]',' ',ref)
     ref = ref.lower()
     ref = re.sub(u'http',' ',ref)
     ref = re.sub(u'www',' ',ref)
     ref = re.sub(u'[ ]+',' ',ref)
     ref = re.split(" ", ref)
     wordcount+=len(ref)
+    wcdoc+=len(ref)
     for i in ref:
         if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
@@ -83,13 +126,16 @@ def parsetext(text,title):
     links = links.join(re.findall(u'==External links==[^=]+\n=', text))
     links = re.sub(u'==External links==',' ',links)
     links = re.sub(u'[^a-zA-Z0-9 ]+',' ',links)
-    links = re.sub(u' 0[0]+ ',' ',links)
+    links = re.sub(u'[^a-zA-Z1-9]0[0]+[1-9]*[^a-zA-Z1-9]',' ',links)
+    links = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[A-Za-z0-9]*[^a-zA-Z1-9]',' ',links)
+    links = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[^a-zA-Z1-9]',' ',links)
     links = links.lower()
     links = re.sub(u'http',' ',links)
     links = re.sub(u'www',' ',links)    
     links = re.sub(u'[ ]+',' ',links)
     links = re.split(" ", links)
     wordcount+=len(links)
+    wcdoc+=len(links)
     for i in links:
         if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
@@ -112,11 +158,14 @@ def parsetext(text,title):
     cat = cat.join(re.findall(u'\[\[Category:(.*?)\]\]', text))
     cat = re.sub(u'[^a-zA-Z0-9 ]+',' ',cat)
     cat = re.sub(u'\[\[Category',' ',cat)
-    cat = re.sub(u' 0[0]+ ',' ',cat)
+    cat = re.sub(u'[^a-zA-Z1-9]0[0]+[1-9]*[^a-zA-Z1-9]',' ',cat)
+    cat = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[A-Za-z0-9]*[^a-zA-Z1-9]',' ',cat)
+    cat = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[^a-zA-Z1-9]',' ',cat)
     cat = cat.lower()
     cat = re.sub(u'[ ]+',' ',cat)
     cat = re.split(" ", cat)
     wordcount+=len(cat)
+    wcdoc+=len(cat)
     for i in cat:
         if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
@@ -140,6 +189,7 @@ def parsetext(text,title):
     titletext = re.sub(u'[ ]+',' ',titletext)
     titletext = re.split(" ", titletext)
     wordcount+=len(titletext)
+    wcdoc+=len(titletext)
     for i in titletext:
         if i not in stop_words and len(i)>1:
             if stemmap[i]=="":
@@ -164,10 +214,13 @@ def parsetext(text,title):
     text = text.lower()
     text = re.sub(u'{{sfn[^}]+}}',' ', text)
     text = re.sub(u'[^a-zA-Z0-9 ]+',' ',text)
-    text = re.sub(u' 0[0]+ ',' ',text)
+    text = re.sub(u'[^a-zA-Z1-9]0[0]+[1-9]*[^a-zA-Z1-9]',' ',text)
+    text = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[A-Za-z0-9]*[^a-zA-Z1-9]',' ',text)
+    text = re.sub(u'[^a-zA-Z1-9][0-9]{5,}[^a-zA-Z1-9]',' ',text)
     text = re.sub(u'[ ]+',' ',text)
     text = re.split(" ", text)
     wordcount+=len(text)
+    wcdoc+=len(text)
     for i in text:
         if i not in stop_words and i != "" and len(i)>1:
             #print(i)
@@ -184,7 +237,7 @@ def parsetext(text,title):
                 countwords[stemmap[i]][idx]["b"]=0
             countwords[stemmap[i]]['tot']+=1            
             countwords[stemmap[i]][idx]["b"]+=1
-
+    titles[0]+=(" "+str(wcdoc)+"\n")
 
 class WikiHandler( xml.sax.ContentHandler):
     
@@ -218,6 +271,8 @@ class WikiHandler( xml.sax.ContentHandler):
                      
     def endElement(self,tag):
         global artcount
+        global wpath
+        global titles
         if(tag=="page"):
             self.page=0
         if(tag=="title"):
@@ -228,39 +283,29 @@ class WikiHandler( xml.sax.ContentHandler):
             self.text=0
             parsetext(self.buftext, self.buftitle)
             self.bufid=artcount
-            titles[int(self.bufid)]=self.buftitle
+            titles[0]+=(str(self.bufid)+" "+str(self.buftitle))
             if (self.bufid%300==0):
-            	print(timeit.default_timer()-start)
-            	print(self.bufid)
+                print(timeit.default_timer()-start)
+                print(self.bufid)
+            if (self.bufid%20000==0):
+                writetext(wpath)
+
 
 if __name__ == "__main__":                                            
     start = timeit.default_timer()
+    wpath = sys.argv[2]
+    if os.path.exists(os.path.join(wpath,"titles.txt")):
+        os.remove(os.path.join(wpath,"titles.txt"))
+    t = open(os.path.join(wpath,"titles.txt"),"w")
     parser = xml.sax.make_parser()
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
     Handler = WikiHandler()
     parser.setContentHandler( Handler )
+    
     parser.parse(sys.argv[1])
-    countwords = dict(countwords)
-    countwords ={k: countwords[k] for k in sorted(countwords)}
-    titleslist=dict(titles)
-    if not os.path.exists(sys.argv[2]):
-        os.mkdir(sys.argv[2])
-    f = open(os.path.join(sys.argv[2],"index.txt"),"w")
-    for i in countwords.keys():
-        writestr=""
-        writestr+=(str(i)+'|f'+str(countwords[i]["tot"])+'d'+str(countwords[i]["d"])+':')
-        for j in countwords[i].keys():
-                if j not in ["tot","d"]:
-                    writestr+=(str(j))
-                    for k in countwords[i][j].keys():
-                            writestr+=(str(k)+str(countwords[i][j][k]))
-                    writestr+=str(";")
-        writestr+=('\n')
-        f.write(writestr)
-    f.close()
-    f = open(os.path.join(sys.argv[2],"titles.txt"),"wb")
-    pickle.dump(titleslist,f, protocol=pickle.HIGHEST_PROTOCOL)
-    f.close()
+    writetext(wpath)
+
+    t.close()
     f = open(sys.argv[3],"w")
     f.write(str(wordcount)+str('\n')+str(len(countwords)))
     f.close()
