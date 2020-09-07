@@ -14,7 +14,6 @@ stemmap=defaultdict(lambda:"")
 start = 0
 wordcount=0
 artcount = 0
-stemcount =0
 countwords=defaultdict(dict)
 fcount = 0
 def writetext(wpath):
@@ -46,7 +45,6 @@ def writetext(wpath):
     del(titles[0])
     titles.append("")
     t= open(os.path.join(wpath,"titles.txt"),"a")
-    stemcount+=len(countwords)
     countwords.clear()
     countwords=defaultdict(dict,countwords)
     fcount+=1
@@ -307,7 +305,6 @@ if __name__ == "__main__":
 
     t.close()
     f = open(sys.argv[3],"w")
-    f.write(str(wordcount)+str('\n')+str(len(countwords)))
+    f.write(str(wordcount)+str('\n')+str(len(stemmap)))
     f.close()
-    stop = timeit.default_timer()
-    print (stop - start)
+    print (timeit.default_timer()- start)
